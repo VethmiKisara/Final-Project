@@ -1,0 +1,11 @@
+SQLAlchemy>=1.4
+psycopg2-binary>=2.9
+sqlalchemy-schemadisplay>=1.7.0
+graphviz>=0.19
+argon2-cffi>=21.3.0
+python-dotenv>=0.21
+alembic>=1.9
+pytest>=7.0
+fastapi>=0.95
+uvicorn>=0.22
+redis>=4.6
