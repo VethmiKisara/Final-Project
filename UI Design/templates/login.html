@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+
+{% block title %}Login - DisasterWatch{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row align-items-center justify-content-center" style="min-height: calc(100vh - 200px);">
+        <div class="col-md-5">
+            <div class="card shadow-lg border-0">
+                <div class="card-body p-5">
+                    <div class="text-center mb-4">
+                        <i class="fas fa-lock fa-3x text-primary mb-3"></i>
+                        <h3>Login to DisasterWatch</h3>
+                        <p class="text-muted small">Access your disaster monitoring dashboard</p>
+                    </div>
+
+                    <!-- Flash Messages -->
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                                <div class="alert alert-{{ 'danger' if category == 'danger' else 'success' if category == 'success' else 'warning' if category == 'warning' else 'info' }} alert-dismissible fade show" role="alert">
+                                    {% if category == 'danger' %}
+                                        <i class="fas fa-exclamation-circle me-2"></i>
+                                    {% elif category == 'success' %}
+                                        <i class="fas fa-check-circle me-2"></i>
+                                    {% elif category == 'warning' %}
+                                        <i class="fas fa-exclamation-triangle me-2"></i>
+                                    {% else %}
+                                        <i class="fas fa-info-circle me-2"></i>
+                                    {% endif %}
+                                    {{ message }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+
+                    <form method="POST" id="loginForm">
+                        <div class="mb-3">
+                            <label for="username" class="form-label">Username</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-0">
+                                    <i class="fas fa-user text-primary"></i>
+                                </span>
+                                <input type="text" class="form-control border-start-0" id="username" name="username"
+                                       placeholder="Enter your username" required>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Password</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-0">
+                                    <i class="fas fa-key text-primary"></i>
+                                </span>
+                                <input type="password" class="form-control border-start-0" id="password" name="password"
+                                       placeholder="Enter your password" required>
+                                <button type="button" class="btn btn-light" id="togglePassword">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Role Selection -->
+                        <div class="mb-3">
+                            <label class="form-label">Login as</label>
+                            <div class="d-flex gap-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="role" id="roleUser" 
+                                           value="user" checked onchange="togglePasskey()">
+                                    <label class="form-check-label" for="roleUser">
+                                        <i class="fas fa-user me-2"></i>User
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="role" id="roleAdmin" 
+                                           value="admin" onchange="togglePasskey()">
+                                    <label class="form-check-label" for="roleAdmin">
+                                        <i class="fas fa-shield-alt me-2"></i>Admin
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Passkey Field (Hidden by default) -->
+                        <div class="mb-3" id="passkeyContainer" style="display: none;">
+                            <label for="passkey" class="form-label">
+                                <i class="fas fa-key text-danger me-1"></i>Admin Passkey
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-0">
+                                    <i class="fas fa-lock text-danger"></i>
+                                </span>
+                                <input type="password" class="form-control border-start-0" id="passkey" name="passkey"
+                                       placeholder="Enter admin passkey">
+                                <button type="button" class="btn btn-light" id="togglePasskeyVisibility">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                            <small class="text-muted d-block mt-2">
+                                <i class="fas fa-info-circle me-1"></i>Required for admin access
+                            </small>
+                        </div>
+
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="rememberMe" name="rememberMe">
+                            <label class="form-check-label" for="rememberMe">
+                                Remember me
+                            </label>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-lg w-100">
+                            <i class="fas fa-sign-in-alt me-2"></i>Login
+                        </button>
+                    </form>
+
+                    <div class="text-center my-3">
+                        <a href="#" class="text-primary text-decoration-none small fw-bold">
+                            <i class="fas fa-question-circle me-1"></i>Forgot Password?
+                        </a>
+                    </div>
+
+                    <hr>
+
+                    <p class="text-center text-muted small mb-0">
+                        Don't have an account? 
+                        <a href="/signup" class="text-primary text-decoration-none fw-bold">Sign up here</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Toggle password visibility
+    document.getElementById('togglePassword').addEventListener('click', function() {
+        const passwordInput = document.getElementById('password');
+        const type = passwordInput.type === 'password' ? 'text' : 'password';
+        passwordInput.type = type;
+        this.innerHTML = type === 'password' ? '<i class="fas fa-eye"></i>' : '<i class="fas fa-eye-slash"></i>';
+    });
+
+    // Toggle passkey visibility
+    document.getElementById('togglePasskeyVisibility').addEventListener('click', function() {
+        const passkeyInput = document.getElementById('passkey');
+        const type = passkeyInput.type === 'password' ? 'text' : 'password';
+        passkeyInput.type = type;
+        this.innerHTML = type === 'password' ? '<i class="fas fa-eye"></i>' : '<i class="fas fa-eye-slash"></i>';
+    });
+
+    // Toggle passkey field visibility based on role selection
+    function togglePasskey() {
+        const roleAdmin = document.getElementById('roleAdmin').checked;
+        const passkeyContainer = document.getElementById('passkeyContainer');
+        const passkeyInput = document.getElementById('passkey');
+        
+        if (roleAdmin) {
+            passkeyContainer.style.display = 'block';
+            passkeyInput.required = true;
+        } else {
+            passkeyContainer.style.display = 'none';
+            passkeyInput.required = false;
+            passkeyInput.value = '';
+        }
+    }
+
+    // Set passkey as required when form is submitted and admin is selected
+    document.getElementById('loginForm').addEventListener('submit', function(e) {
+        const roleAdmin = document.getElementById('roleAdmin').checked;
+        const passkeyInput = document.getElementById('passkey');
+        
+        if (roleAdmin && !passkeyInput.value) {
+            e.preventDefault();
+            alert('Please enter the admin passkey');
+            passkeyInput.focus();
+        }
+    });
+</script>
+{% endblock %}
