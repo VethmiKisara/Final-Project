@@ -1,0 +1,247 @@
+{% extends "base.html" %}
+
+{% block title %}Alert Logs - DisasterWatch{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-lg-8">
+            <h2 class="mb-0">
+                <i class="fas fa-list-alt me-2"></i>Alert Logs
+            </h2>
+            <p class="text-muted small">View and filter all detected disaster alerts</p>
+        </div>
+        <div class="col-lg-4">
+            <div class="input-group">
+                <span class="input-group-text bg-light">
+                    <i class="fas fa-search"></i>
+                </span>
+                <input type="text" class="form-control" id="searchAlerts" placeholder="Search alerts...">
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Row -->
+    <div class="row mb-3">
+        <div class="col-lg-2">
+            <label class="small fw-bold">Disaster Type</label>
+            <select id="filterType" class="form-select form-select-sm">
+                <option value="">All Types</option>
+                <option value="Flood">Flood</option>
+                <option value="Earthquake">Earthquake</option>
+                <option value="Wildfire">Wildfire</option>
+                <option value="Storm">Storm</option>
+                <option value="Landslide">Landslide</option>
+            </select>
+        </div>
+        <div class="col-lg-2">
+            <label class="small fw-bold">Severity</label>
+            <select id="filterSeverity" class="form-select form-select-sm">
+                <option value="">All Levels</option>
+                <option value="high">High</option>
+                <option value="medium">Medium</option>
+                <option value="low">Low</option>
+            </select>
+        </div>
+        <div class="col-lg-2">
+            <label class="small fw-bold">Min Confidence (%)</label>
+            <input type="number" id="filterConfidence" class="form-control form-control-sm" min="0" max="100" placeholder="0">
+        </div>
+        <div class="col-lg-2">
+            <label class="small fw-bold">&nbsp;</label>
+            <button id="applyFiltersBtn" class="btn btn-primary btn-sm w-100">Apply</button>
+        </div>
+        <div class="col-lg-2">
+            <label class="small fw-bold">&nbsp;</label>
+            <button id="resetFiltersBtn" class="btn btn-outline-secondary btn-sm w-100">Reset</button>
+        </div>
+    </div>
+
+    <!-- Table -->
+    <div class="table-responsive">
+        <table class="table table-hover align-middle" id="alertsTable">
+            <thead class="table-light">
+                <tr>
+                    <th style="width: 12%;">Type</th>
+                    <th style="width: 15%;">Message</th>
+                    <th style="width: 12%;">Confidence</th>
+                    <th style="width: 12%;">Credibility</th>
+                    <th style="width: 12%;">Severity</th>
+                    <th style="width: 18%;">Timestamp</th>
+                    <th style="width: 19%;">Location</th>
+                </tr>
+            </thead>
+            <tbody id="alertsTableBody">
+                <tr>
+                    <td colspan="7" class="text-center text-muted py-4">
+                        <i class="fas fa-spinner fa-spin me-2"></i>Loading alerts...
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Stats -->
+    <div class="row mt-4">
+        <div class="col-md-3">
+            <div class="card border-0 bg-light">
+                <div class="card-body">
+                    <small class="text-muted d-block">Total Alerts</small>
+                    <h4 class="mb-0" id="statTotal">0</h4>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 bg-danger bg-opacity-10">
+                <div class="card-body">
+                    <small class="text-danger d-block">High Severity</small>
+                    <h4 class="mb-0 text-danger" id="statHigh">0</h4>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 bg-warning bg-opacity-10">
+                <div class="card-body">
+                    <small class="text-warning d-block">Medium Severity</small>
+                    <h4 class="mb-0 text-warning" id="statMedium">0</h4>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 bg-success bg-opacity-10">
+                <div class="card-body">
+                    <small class="text-success d-block">Low Severity</small>
+                    <h4 class="mb-0 text-success" id="statLow">0</h4>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .table-danger { background-color: rgba(220, 53, 69, 0.1); }
+    .table-warning { background-color: rgba(255, 193, 7, 0.1); }
+    .table-success { background-color: rgba(40, 167, 69, 0.1); }
+    
+    .badge-severity-high { background-color: #dc3545; }
+    .badge-severity-medium { background-color: #ffc107; color: #000; }
+    .badge-severity-low { background-color: #28a745; }
+</style>
+
+<script>
+    let allAlerts = [];
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Check if user is logged in
+        if (sessionStorage.getItem('isLoggedIn') !== 'true') {
+            window.location.href = '/';
+            return;
+        }
+
+        loadAlerts();
+
+        // Event listeners
+        document.getElementById('applyFiltersBtn').addEventListener('click', applyFilters);
+        document.getElementById('resetFiltersBtn').addEventListener('click', resetFilters);
+        document.getElementById('searchAlerts').addEventListener('input', filterTable);
+
+        // Auto-refresh every 15 seconds
+        setInterval(loadAlerts, 15000);
+    });
+
+    function loadAlerts() {
+        fetch('/api/alerts')
+            .then(response => response.json())
+            .then(data => {
+                allAlerts = data;
+                renderTable(data);
+                updateStats(data);
+            })
+            .catch(error => console.error('Error fetching alerts:', error));
+    }
+
+    function renderTable(alerts) {
+        const tbody = document.getElementById('alertsTableBody');
+        
+        if (alerts.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">No alerts found</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = alerts.map(alert => {
+            const rowClass = alert.severity === 'high' ? 'table-danger' : 
+                           alert.severity === 'medium' ? 'table-warning' : 'table-success';
+            
+            const severityBadge = `<span class="badge badge-severity-${alert.severity}">${alert.severity.toUpperCase()}</span>`;
+            
+            return `
+                <tr class="${rowClass}">
+                    <td>
+                        <i class="fas fa-exclamation-circle text-muted me-2"></i>
+                        <strong>${alert.type}</strong>
+                    </td>
+                    <td>${alert.message}</td>
+                    <td>
+                        <div class="progress" style="height: 20px;">
+                            <div class="progress-bar" style="width: ${alert.confidence}%">
+                                ${alert.confidence}%
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="progress" style="height: 20px;">
+                            <div class="progress-bar bg-info" style="width: ${alert.credibility}%">
+                                ${alert.credibility}%
+                            </div>
+                        </div>
+                    </td>
+                    <td>${severityBadge}</td>
+                    <td><small>${alert.timestamp}</small></td>
+                    <td><small>${alert.lat.toFixed(2)}°, ${alert.lng.toFixed(2)}°</small></td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    function applyFilters() {
+        const type = document.getElementById('filterType').value;
+        const severity = document.getElementById('filterSeverity').value;
+        const confidence = parseInt(document.getElementById('filterConfidence').value) || 0;
+
+        const filtered = allAlerts.filter(alert => {
+            return (type === '' || alert.type === type) &&
+                   (severity === '' || alert.severity === severity) &&
+                   alert.confidence >= confidence;
+        });
+
+        renderTable(filtered);
+        updateStats(filtered);
+    }
+
+    function resetFilters() {
+        document.getElementById('filterType').value = '';
+        document.getElementById('filterSeverity').value = '';
+        document.getElementById('filterConfidence').value = '';
+        document.getElementById('searchAlerts').value = '';
+        renderTable(allAlerts);
+        updateStats(allAlerts);
+    }
+
+    function filterTable() {
+        const searchTerm = document.getElementById('searchAlerts').value.toLowerCase();
+        const rows = document.getElementById('alertsTableBody').querySelectorAll('tr');
+
+        rows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+            row.style.display = text.includes(searchTerm) ? '' : 'none';
+        });
+    }
+
+    function updateStats(alerts) {
+        document.getElementById('statTotal').textContent = alerts.length;
+        document.getElementById('statHigh').textContent = alerts.filter(a => a.severity === 'high').length;
+        document.getElementById('statMedium').textContent = alerts.filter(a => a.severity === 'medium').length;
+        document.getElementById('statLow').textContent = alerts.filter(a => a.severity === 'low').length;
+    }
+</script>
+{% endblock %}

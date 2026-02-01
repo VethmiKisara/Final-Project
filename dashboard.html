@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - DisasterWatch{% endblock %}
+
+{% block content %}
+<div class="container-fluid h-100">
+    <div class="row g-0 h-100" style="min-height: calc(100vh - 200px);">
+        <!-- Map Section (70%) -->
+        <div class="col-lg-8 map-container">
+            <div id="map" class="h-100"></div>
+            
+            <!-- Real-time indicator -->
+            <div class="position-absolute top-3 start-3 bg-white p-2 rounded shadow-sm" style="z-index: 400;">
+                <span class="badge bg-success me-2">
+                    <i class="fas fa-circle-notch fa-spin"></i> LIVE
+                </span>
+                <small class="text-muted">Real-time monitoring active</small>
+            </div>
+        </div>
+
+        <!-- Sidebar Section (30%) -->
+        <div class="col-lg-4 sidebar-container bg-light border-start">
+            <!-- Filter Section -->
+            <div class="p-3 bg-white border-bottom">
+                <h5 class="mb-3">
+                    <i class="fas fa-filter me-2"></i>Filters
+                </h5>
+                
+                <!-- Disaster Type Filter -->
+                <div class="mb-3">
+                    <label for="typeFilter" class="form-label small fw-bold">Disaster Type</label>
+                    <select id="typeFilter" class="form-select form-select-sm">
+                        <option value="all">All Types</option>
+                        <option value="Flood">Flood</option>
+                        <option value="Earthquake">Earthquake</option>
+                        <option value="Wildfire">Wildfire</option>
+                        <option value="Storm">Storm</option>
+                        <option value="Landslide">Landslide</option>
+                        <option value="Tsunami">Tsunami</option>
+                        <option value="Drought">Drought</option>
+                    </select>
+                </div>
+
+                <!-- Severity Filter -->
+                <div class="mb-3">
+                    <label for="severityFilter" class="form-label small fw-bold">Severity</label>
+                    <select id="severityFilter" class="form-select form-select-sm">
+                        <option value="all">All Levels</option>
+                        <option value="high">High</option>
+                        <option value="medium">Medium</option>
+                        <option value="low">Low</option>
+                    </select>
+                </div>
+
+                <!-- Confidence Filter -->
+                <div class="mb-3">
+                    <label for="confidenceFilter" class="form-label small fw-bold">Min. Confidence (%)</label>
+                    <input type="range" id="confidenceFilter" class="form-range" min="0" max="100" value="0">
+                    <small class="text-muted" id="confidenceValue">All (0%+)</small>
+                </div>
+
+                <!-- Apply Button -->
+                <button id="applyFilters" class="btn btn-primary btn-sm w-100">
+                    <i class="fas fa-check me-2"></i>Apply Filters
+                </button>
+                <button id="resetFilters" class="btn btn-outline-secondary btn-sm w-100 mt-2">
+                    <i class="fas fa-redo me-2"></i>Reset
+                </button>
+            </div>
+
+            <!-- Alert Details Section -->
+            <div class="p-3 flex-grow-1 overflow-y-auto" id="alertDetailsContainer" style="max-height: calc(100vh - 500px);">
+                <div class="text-center text-muted py-5">
+                    <i class="fas fa-map-marker-alt fa-3x mb-3 opacity-25"></i>
+                    <p>Click on a marker to view alert details</p>
+                </div>
+            </div>
+
+            <!-- Stats Footer -->
+            <div class="p-3 bg-white border-top">
+                <div class="row g-2 text-center">
+                    <div class="col-6">
+                        <small class="text-muted d-block">Total Alerts</small>
+                        <h5 class="mb-0" id="totalAlerts">0</h5>
+                    </div>
+                    <div class="col-6">
+                        <small class="text-muted d-block">High Severity</small>
+                        <h5 class="mb-0 text-danger" id="highSeverityCount">0</h5>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/map.js') }}"></script>
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Check if user is logged in
+        if (sessionStorage.getItem('isLoggedIn') !== 'true') {
+            window.location.href = '/';
+            return;
+        }
+
+        // Initialize map and dashboard
+        initMap();
+        loadAlerts();
+        
+        // Set up real-time update every 20 seconds
+        setInterval(function() {
+            addRandomAlert();
+        }, 20000);
+
+        // Filter handlers
+        document.getElementById('confidenceFilter').addEventListener('change', function() {
+            document.getElementById('confidenceValue').textContent = 'All (' + this.value + '%+)';
+        });
+
+        document.getElementById('applyFilters').addEventListener('click', function() {
+            loadAlerts();
+        });
+
+        document.getElementById('resetFilters').addEventListener('click', function() {
+            document.getElementById('typeFilter').value = 'all';
+            document.getElementById('severityFilter').value = 'all';
+            document.getElementById('confidenceFilter').value = 0;
+            document.getElementById('confidenceValue').textContent = 'All (0%+)';
+            loadAlerts();
+        });
+
+        // Update stats
+        updateStats();
+        setInterval(updateStats, 30000);
+    });
+
+    function updateStats() {
+        const markers = window.mapMarkers || [];
+        document.getElementById('totalAlerts').textContent = markers.length;
+        
+        const highCount = markers.filter(m => m.severity === 'high').length;
+        document.getElementById('highSeverityCount').textContent = highCount;
+    }
+</script>
+{% endblock %}
