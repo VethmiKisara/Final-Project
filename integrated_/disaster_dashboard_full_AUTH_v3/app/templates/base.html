@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>{{ title or "DisasterWatch" }}</title>
+
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}"/>
+</head>
+<body>
+  {% if current_user %}
+  <header class="topbar">
+    <div class="brand">DisasterWatch</div>
+
+    <nav class="navlinks">
+      <a class="navlink {{ 'active' if active_page=='dashboard' else '' }}" href="{{ url_for('pages.dashboard') }}">Dashboard</a>
+      <a class="navlink {{ 'active' if active_page=='alerts' else '' }}" href="{{ url_for('pages.alert_logs') }}">Alert Logs</a>
+      <a class="navlink" href="{{ url_for('auth.logout') }}">Logout</a>
+    </nav>
+  </header>
+  {% endif %}
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="flashwrap">
+        {% for category, message in messages %}
+          <div class="flash {{ category }}">{{ message }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  {% block body %}{% endblock %}
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

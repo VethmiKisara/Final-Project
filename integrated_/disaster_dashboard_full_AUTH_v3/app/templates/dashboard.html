@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% set title = "DisasterWatch – Dashboard" %}
+{% set active_page = "dashboard" %}
+
+{% block body %}
+<main class="layout">
+  <section class="content">
+    <div id="map" class="map"></div>
+
+    <div class="input-card">
+      <h3>Test Input</h3>
+      <p class="hint">Text will be saved to <code>posts.original_text</code>. Images are saved to disk and stored as an absolute path in <code>posts.image_path</code>.</p>
+
+      <form id="ingestForm" enctype="multipart/form-data">
+        <label>Text</label>
+        <textarea name="text" id="inputText" rows="3" placeholder="Enter text..."></textarea>
+
+        <label>Image (optional)</label>
+        <input type="file" name="image" id="inputImage" accept=".jpg,.jpeg,.png,.webp" />
+
+        <button type="submit" class="btn">Save Post</button>
+        <div id="ingestStatus" class="status"></div>
+      </form>
+    </div>
+  </section>
+
+  <aside class="sidebar">
+    <h3>Filters</h3>
+
+    <div class="filter-group">
+      <label class="label">Disaster Types</label>
+      <div id="typeChecks" class="checks"></div>
+    </div>
+
+    <div class="filter-group">
+      <label class="label">Informative Confidence (0–10)</label>
+      <div class="range-row">
+        <div>
+          <div class="small">Min</div>
+          <input id="minAConf" type="range" min="0" max="10" value="0">
+          <div class="value" id="minAConfVal">0</div>
+        </div>
+        <div>
+          <div class="small">Max</div>
+          <input id="maxAConf" type="range" min="0" max="10" value="10">
+          <div class="value" id="maxAConfVal">10</div>
+        </div>
+      </div>
+    </div>
+
+    <button id="applyBtn" class="btn secondary">Apply Filters</button>
+    <div id="countBox" class="countBox">Points: 0</div>
+
+    <div class="legend">
+      <h4>Legend</h4>
+      <div id="legendItems"></div>
+    </div>
+  </aside>
+</main>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+{% endblock %}

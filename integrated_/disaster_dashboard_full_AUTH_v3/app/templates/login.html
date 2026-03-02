@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block body %}
+<main class="auth-page">
+  <section class="auth-card">
+    <div class="auth-brand">Disaster Watch</div>
+    <h1 class="auth-title">Login</h1>
+
+    <form method="post" action="{{ url_for('auth.login_post', next=request.args.get('next')) }}" class="auth-form" novalidate>
+      <label class="auth-label" for="email">Email</label>
+      <input class="auth-input" id="email" name="email" type="email" placeholder="Enter your email" required />
+
+      <label class="auth-label" for="password">Password</label>
+      <input class="auth-input" id="password" name="password" type="password" placeholder="Enter password" required />
+
+      <button id="loginBtn" class="auth-btn" type="submit" disabled>Login</button>
+    </form>
+
+    <div class="auth-links">
+      <a href="{{ url_for('auth.signup') }}">Don’t have an account? Sign Up</a>
+      <a href="{{ url_for('auth.forgot_password') }}">Forgot Password?</a>
+    </div>
+  </section>
+</main>
+{% endblock %}
+
+{% block scripts %}
+  <script src="{{ url_for('static', filename='js/auth.js') }}"></script>
+{% endblock %}

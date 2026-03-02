@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% set title = "DisasterWatch – Alert Logs" %}
+{% set active_page = "alerts" %}
+
+{% block body %}
+<main class="layout logs-layout">
+  <section class="content logs-content">
+    <div class="card">
+      <h3>Active Alerts</h3>
+      <p class="hint">These are alerts currently visible on the map (not expired + informative label = 1).</p>
+
+      <div class="table-wrap">
+        <table class="table" id="alertsTable">
+          <thead>
+            <tr>
+              <th>Post ID</th>
+              <th>Disaster Type</th>
+              <th>Location</th>
+              <th>Informative Conf</th>
+              <th>Disaster Conf</th>
+              <th>Created</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <div id="alertsStatus" class="status"></div>
+    </div>
+  </section>
+
+  <aside class="sidebar">
+    <h3>Filters</h3>
+
+    <div class="filter-group">
+      <label class="label">Disaster Types</label>
+      <div id="typeChecks" class="checks"></div>
+    </div>
+
+    <div class="filter-group">
+      <label class="label">Informative Confidence (0–10)</label>
+      <div class="range-row">
+        <div>
+          <div class="small">Min</div>
+          <input id="minAConf" type="range" min="0" max="10" value="0">
+          <div class="value" id="minAConfVal">0</div>
+        </div>
+        <div>
+          <div class="small">Max</div>
+          <input id="maxAConf" type="range" min="0" max="10" value="10">
+          <div class="value" id="maxAConfVal">10</div>
+        </div>
+      </div>
+    </div>
+
+    <button id="applyBtn" class="btn secondary">Apply Filters</button>
+  </aside>
+</main>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/alert_logs.js') }}"></script>
+{% endblock %}

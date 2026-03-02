@@ -1,0 +1,3 @@
+-- No extra schema needed for this UI.
+-- This project now reads/writes the normalized schema in your dump:
+-- posts, pipeline_runs, task_a_results, task_b_results, locations, disaster_classes, users, password_reset_tokens
