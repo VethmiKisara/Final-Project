@@ -1,9 +1,13 @@
+import atexit
+import os
+
 from flask import Flask
 from .config import Config
 from .db import init_db
 from .routes.pages import pages_bp
 from .routes.auth import auth_bp
 from .routes.api import api_bp
+
 
 def create_app():
     app = Flask(__name__, static_folder="static", template_folder="templates")
@@ -29,4 +33,22 @@ def create_app():
             else None
         }
 
+    _register_scraper(app)
+
     return app
+
+
+def _register_scraper(app: Flask) -> None:
+    """Only runs in production (FLASK_ENV=production)."""
+    if os.getenv("FLASK_ENV") != "production":
+        return
+
+    from apscheduler.schedulers.background import BackgroundScheduler
+    from .scraper import run_once
+
+    scheduler = BackgroundScheduler(daemon=True)
+    scheduler.add_job(run_once, "interval", minutes=15, id="scraper")
+    scheduler.start()
+    app.logger.info("Scraper scheduler started — running every 15 minutes")
+
+    atexit.register(lambda: scheduler.shutdown(wait=False))
